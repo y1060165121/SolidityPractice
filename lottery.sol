@@ -11,43 +11,44 @@ contract Lottery{
   uint256 public currentTime;
 
   constructor() {
-        admin = msg.sender;
+        manager = msg.sender;
         //automatically adds admin on deployment
 
   }
 
   function enterGame() public payable {
       require(msg.value > ticketPrice);
-      players.push(msg.sender);
+      players.push(payable(msg.sender));
 
-      if (players.length >= 10 || current + 1 hours < now){
-          pickWinnerAndDeposit();
+      if (players.length >= 10 || currentTime + 1 hours < block.timestamp){
+          pickWinnerAndTransfer();
       }
       else if (players.length == 1){
-        currentTime = now;
+        currentTime = block.timestamp;
       }
       else{
-        return
+        return;
       }
   }
 
   function enterGameForSomeone(address someAddress) public payable {
       require(msg.value > ticketPrice);
-      players.push(someAddress);
+      players.push(payable(someAddress));
 
-      if (players.length >= 10 || current + 1 hours < now){
-          pickWinnerAndDeposit();
+
+      if (players.length >= 10 || currentTime + 1 hours < block.timestamp){
+          pickWinnerAndTransfer();
       }
       else if (players.length == 1){
-        currentTime = now
+        currentTime = block.timestamp;
       }
       else{
-        return
+        return;
       }
   }
 
   function random() private view returns (uint) {
-      return uint(keccak256(block.difficulty, block.timestamp, players));
+      return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players.length)));
   }
 
   function pickWinnerAndTransfer() public payable {
@@ -57,13 +58,9 @@ contract Lottery{
 
   }
 
-  function getPlayers() public view returns (address[]) {
-      return players;
-  }
-
   function resetGame() public payable {
-      players = new address[](0);
-      currentTime = now;
+      players = new address payable[](0);
+      currentTime = block.timestamp;
   }
 
 
